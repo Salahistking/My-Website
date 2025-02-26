@@ -1,0 +1,73 @@
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('gta_background.jpg'); /* Hintergrundbild */
+    background-size: cover;
+    background-position: center;
+    margin: 0;
+    padding: 20px;
+    color: white;
+}
+
+h1, h2 {
+    color: #ffcc00;
+}
+
+.container {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+#freundesliste {
+    list-style-type: none;
+    padding: 0;
+}
+
+#freundesliste li {
+    background-color: #333;
+    border: 1px solid #555;
+    margin: 5px 0;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#chatbox {
+    border: 1px solid #555;
+    background-color: #333;
+    padding: 10px;
+    height: 300px;
+    overflow-y: scroll;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+#freund_ip, #nachricht, #codeInput, #username, #password {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background-color: #333;
+    color: white;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #ffcc00;
+    color: #333;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #ff9900;
+}
+
+.rating, .comments {
+    margin-left: 10px;
+    cursor: pointer;
+    color: #ffcc00;
+}
