@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freischaltbare Spiele</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Freischaltbare Spiele</h1>
+        
+        <div id="loginSection">
+            <input type="text" id="username" placeholder="Benutzername">
+            <input type="password" id="password" placeholder="Passwort">
+            <button onclick="login()">Anmelden</button>
+            <button onclick="register()">Registrieren</button>
+        </div>
+
+        <div id="unlockSection" style="display: none;">
+            <input type="text" id="codeInput" placeholder="Freischaltcode eingeben">
+            <button onclick="unlockGames()">Freischalten</button>
+        </div>
+
+        <div id="gamesSection" style="display: none;">
+            <h2>Offline Games</h2>
+            <ul id="offlineGamesList">
+                <!-- 20 Offline Spiele -->
+            </ul>
+
+            <h2>Offline Shooter Games</h2>
+            <ul id="offlineShooterGamesList">
+                <!-- 20 Offline Shooter Spiele -->
+            </ul>
+
+            <h2>Online Shooter Games</h2>
+            <ul id="onlineShooterGamesList">
+                <!-- 10 Online Shooter Spiele -->
+            </ul>
+
+            <h2>Zwei Spieler Games</h2>
+            <ul id="twoPlayerGamesList">
+                <!-- 5 Zwei Spieler Spiele -->
+            </ul>
+        </div>
+
+        <div>
+            <h2>Freunde:</h2>
+            <ul id="freundesliste">
+                <!-- Freunde werden hier angezeigt -->
+            </ul>
+            <input type="text" id="freund_ip" placeholder="Freund IP hinzufügen">
+            <button onclick="addFriend()">Freund Hinzufügen</button>
+        </div>
+
+        <h2>Chat</h2>
+        <div>
+            <div id="chatbox">
+                <!-- Nachrichten erscheinen hier -->
+            </div>
+            <input type="text" id="nachricht" placeholder="Nachricht eingeben">
+            <button onclick="sendMessage()">Nachricht senden</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const freischaltcode = '26124';
+        let freundIp = '';  // IP-Adresse des aktuellen Freundes
+        let currentUser = null;
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            $.post('/login', { username, password }, function(user) {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('unlockSection').style.display = 'block';
+                } else {
+                    alert('Anmeldung fehlgeschlagen!');
+                }
+            });
+        }
+
+        function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            $.post('/register', { username, password }, function(response) {
+                if (response.success) {
+                    alert('Registrierung erfolgreich!');
+                } else {
+                    alert('Registrierung fehlgeschlagen!');
+                }
+            });
+        }
+
+        function unlockGames() {
+            const code = document.getElementById('codeInput').value;
+            if (code === freischaltcode) {
+                document.getElementById('gamesSection').style.display = 'block';
+                document.getElementById('unlockSection').style.display = 'none';
+                loadGames();
+            } else {
+                alert('Falscher Code!');
+            }
+        }
+
+        function loadGames() {
+            const offlineGames = Array.from({ length: 20 }, (_, i) => `Offline Game ${i + 1}`);
+            const offlineShooterGames = Array.from({ length: 20 }, (_, i) => `Offline Shooter Game ${i + 1}`);
+            const onlineShooterGames = Array.from({ length: 10 }, (_, i) => `Online Shooter Game ${i + 1}`);
+            const twoPlayerGames = Array.from({ length: 5 }, (_, i) => `Two Player Game ${i + 1}`);
+
+            appendGamesToList(offlineGames, 'offlineGamesList');
+            appendGamesToList(offlineShooterGames, 'offlineShooterGamesList');
+            appendGamesToList(onlineShooterGames, 'onlineShooterGamesList');
+            appendGamesToList(twoPlayerGames, 'twoPlayerGamesList');
+        }
+
+        function appendGamesToList(games, listId) {
+            const list = document.getElementById(listId);
+            games.forEach(game => {
+                const li = document.createElement('li');
+                const gameName = document.createElement('span');
+                gameName.textContent = game;
+                const rating = document.createElement('span');
+                rating.className = 'rating';
+                rating.textContent = '⭐';
+                rating.onclick = () => rateGame(game);
+                const comments = document.createElement('span');
+                comments.className = 'comments';
+                comments.textContent = '💬';
+                comments.onclick = () => commentOnGame(game);
+                li.appendChild(gameName);
+                li.appendChild(rating);
+                li.appendChild(comments);
+                list.appendChild(li);
+            });
+        }
+
+        function rateGame(game) {
+            const rating = prompt(`Bewerte ${game} (1-5 Sterne):`);
+            if (rating >= 1 && rating <= 5) {
+                $.post('/rate_game', { username: currentUser.username, game, rating }, function(response) {
+                    if (response.success) {
+                        alert('Bewertung erfolgreich abgegeben!');
+                    } else {
+                        alert('Bewertung fehlgeschlagen!');
+                    }
+                });
+            } else {
+                alert('Ungültige Bewertung!');
+            }
+        }
+
+        function commentOnGame(game) {
+            const comment = prompt(`Kommentar zu ${game}:`);
+            if (comment) {
+                $.post('/comment_game', { username: currentUser.username, game, comment }, function(response) {
+                    if (response.success) {
+                        alert('Kommentar erfolgreich abgegeben!');
+                    } else {
+                        alert('Kommentar fehlgeschlagen!');
+                    }
+                });
+            }
+        }
+
+        function sendMessage() {
+            const nachricht = document.getElementById('nachricht').value;
+            if (freundIp && nachricht) {
+                socket.send(freundIp + ":" + nachricht);
+                document.getElementById('nachricht').value = '';  // Nachricht-Feld leeren
+            } else {
+                alert('Bitte wähle einen Freund und gib eine Nachricht ein!');
+            }
+        }
+
+        socket.on('nachricht', function(data) {
+            const chatbox = document.getElementById('chatbox');
+            const newMessage = document.createElement('p');
+            newMessage.textContent = `Von ${data.von}: ${data.nachricht}`;
+            chatbox.appendChild(newMessage);
+        });
+
+        function addFriend() {
+            const freundIpInput = document.getElementById('freund_ip').value;
+            if (freundIpInput) {
+                $.post('/add_friend', { username: currentUser.username, freundIp: freundIpInput }, function(response) {
+                    if (response.success) {
+                        alert('Freund erfolgreich hinzugefügt!');
+                        document.getElementById('freund_ip').value = '';  // Eingabefeld leeren
+                    } else {
+                        alert('Freund hinzufügen fehlgeschlagen!');
+                    }
+                });
+            } else {
+                alert('Bitte gib eine gültige Freund-IP ein!');
+            }
+        }
+    </script>
+</body>
+</html>
